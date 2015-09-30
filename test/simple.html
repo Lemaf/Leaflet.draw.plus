@@ -1,0 +1,80 @@
+<html>
+	<head>
+		<script type="text/javascript" src="../bower_components/leaflet-dist/leaflet.js"></script>
+		<script type="text/javascript" src="../bower_components/leaflet-draw/dist/leaflet.draw-src.js"></script>
+		<!-- <script type="text/javascript" src="../bower_components/catiline/dist/catiline.js"></script> -->
+		<!-- <script type="text/javascript" src="../bower_components/shp/dist/shp.min.js"></script> -->
+		<script type="text/javascript" src="../dist/leaflet.draw.imports.js"></script>
+		<link rel="stylesheet" type="text/css" href="../bower_components/leaflet-dist/leaflet.css">
+		<link rel="stylesheet" type="text/css" href="../bower_components/leaflet-draw/dist/leaflet.draw.css">
+		<link rel="stylesheet" type="text/css" href="../dist/leaflet.draw.imports.css">
+
+		<style type="text/css">
+			html, body {
+				padding: 0px;
+				margin: 0px;
+			}
+
+			div#testMap {
+				position: absolute;
+				height: 100%;
+				width: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div id="testMap"></div>
+
+		<script type="text/javascript">
+
+			L.DomEvent.addListener(window, 'load', function() {
+				var map = L.map('testMap', {
+					center: [-21, -45],
+					zoom: 7
+				});
+
+				var tileLayer = L.tileLayer('http://api.tiles.mapbox.com/v4/{mapId}/{z}/{x}/{y}.png?access_token={apiKey}', {
+					apiKey: 'pk.eyJ1IjoicnRob3RoIiwiYSI6Ikl4bnI0SHcifQ.9EJ8jjvGPX1FbebW8GQ2PA',
+					mapId: 'rthoth.m255phm5'
+				})
+
+				var features = L.featureGroup();
+				var editLayer = L.featureGroup();
+				
+				map.addLayer(tileLayer);
+				map.addLayer(editLayer);
+				map.addLayer(features);
+
+				var drawControl = new L.Control.Draw({
+					draw: {
+						imports: {
+							
+						}
+					},
+
+					edit: {
+						featureGroup: features
+					}
+				});
+
+				map.on('draw:created', function(evt) {
+					features.addLayer(evt.layer);
+				});
+
+				map.addControl(drawControl);
+
+				L.Draw.Imports.SHPJS_URL = (new URL('../bower_components/shp/dist/shp.js', location.toString())).toString();
+
+				map.on('draw:importstart', function() {
+					console.log('Shapefile import started!');
+				});
+
+				map.on('draw:importend', function() {
+					console.log('Shapefile import end!')
+				});
+			});
+		</script>
+	</body>
+</html>
