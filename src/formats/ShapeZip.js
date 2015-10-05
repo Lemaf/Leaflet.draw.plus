@@ -8,8 +8,10 @@
 	}
 
 	ShpZipFormat = {
-		next: 1,
-		callbacks: {},
+
+		_handlers: {},
+
+		_nextId: 1,
 
 		createOpenButton: function() {
 			var link = L.DomUtil.create('a');
@@ -22,69 +24,19 @@
 			var input = L.DomUtil.create('input', 'leaflet-draw-draw-imports-action', link);
 			input.type = 'file';
 
+			var handler = this;
+
 			input.onchange = function() {
-				ShpZipFormat.openShapeZip.call(this, input);
-			}.bind(this);
+				ShpZipFormat._openShapeZip(handler, input);
+			};
 
 			return link;
 		},
 
-		parse: function(byteArray, callback) {
-			var worker = this.getWorker();
-			var id = this.next++;
+		nop: function() {},
 
-			this.callbacks[id] = callback;
-			worker.postMessage({id: id, byteArray: byteArray}, [byteArray]);
-		},
-
-		onmessage: function(e) {
-			var callback = this.callbacks[e.data.id];
-
-			if (callback) {
-				delete this.callbacks[e.data.id];
-				callback(e.data.geoJSON);
-			}
-		},
-
-		openShapeZip: function(input) {
-			if (!input.files && !input.files[0])
-				return;
-
-			var reader = new FileReader();
-
-			reader.onload = function() {
-
-				if (reader.readyState !== 2)
-					return;
-
-				if (reader.result) {
-
-					ShpZipFormat.parse(reader.result, function(geoJSON) {
-						try {
-							switch (geoJSON.type) {
-								case 'FeatureCollection':
-									geoJSON.features.forEach(function(feature) {
-										var layer = L.GeoJSON.geometryToLayer(feature);
-										this._fireCreatedEvent(layer);
-									}, this);
-									break;
-								default:
-									this._fireCreatedEvent(L.GeoJSON.geometryToLayer(geoJSON));
-							}
-						} finally {
-							this._map.fire('draw:importend');
-						}
-					}.bind(this));
-				}
-
-			}.bind(this);
-
-			this._map.fire('draw:importstart');
-			reader.readAsArrayBuffer(input.files[0]);
-		},
-
-		getWorker: function() {
-			if (!this.worker) {
+		_getWorker: function() {
+			if (!this._worker) {
 				if (L.Draw.Imports.SHPJS_URL) {
 
 					// No external .js script
@@ -97,18 +49,77 @@
 					"}";
 
 					var urlData = URL.createObjectURL(new Blob([script], {type: "application/javascript"}));
-					this.worker = new Worker(urlData);
+					this._worker = new Worker(urlData);
 
-					this.worker.onmessage = this.onmessage.bind(this);
-					this.worker.onerror = function() {
+					this._worker.onmessage = this._onmessage.bind(this);
+					this._worker.onerror = function() {
 						console.log(arguments);
 					};
 				} else
 					throw new Error('Need shapefile-js URL');
 			}
 
-			return this.worker;
-		}
+			return this._worker;
+		},
+
+		_onmessage: function(e) {
+			var geoJSON = e.data.geoJSON;
+			var handler = this._handlers[e.data.id];
+
+			// TODO: Is it always FeatureCollection?
+			
+			var properties, geometry, newFeature, i, layer;
+
+			geoJSON.features.forEach(function(feature) {
+				properties = feature.properties;
+				geometry = feature.geometry;
+
+				if (geometry.type.startsWith("Multi")) {
+					for (i=0; i<geometry.coordinates.length; i++) {
+						newFeature = {
+							type: geometry.type.substring(5),
+							properties: properties,
+							coordinates: geometry.coordinates[i]
+						};
+
+						layer = L.GeoJSON.geometryToLayer(newFeature);
+						handler._fireCreatedEvent(layer);
+					}
+				} else {
+					layer = L.GeoJSON.geometryToLayer(feature);
+					handler._fireCreatedEvent(layer);
+				}
+			});
+		},
+
+		_openShapeZip: function(handler, input) {
+			if (!input.files && !input.files[0])
+				return;
+
+			var reader = new FileReader();
+
+			reader.onload = function() {
+
+				if (reader.readyState !== 2)
+					return;
+
+				if (reader.result) {
+					ShpZipFormat._parse(handler, reader.result);
+				}
+
+			};
+
+			handler._map.fire('draw:importstart');
+			reader.readAsArrayBuffer(input.files[0]);
+		},
+
+		_parse: function(handler, byteArray) {
+			var worker = this._getWorker();
+			var id = this._nextId++;
+			this._handlers[id] = handler;
+
+			worker.postMessage({id: id, byteArray: byteArray}, [byteArray]);
+		},
 	};
 
 	L.Draw.Imports.FORMATS.push({
