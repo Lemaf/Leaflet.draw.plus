@@ -40,12 +40,16 @@
 					mapId: 'rthoth.m255phm5'
 				})
 
-				var features = L.featureGroup();
 				var editLayer = L.featureGroup();
 				
 				map.addLayer(tileLayer);
 				map.addLayer(editLayer);
-				map.addLayer(features);
+			
+				var layers = [L.featureGroup(), L.featureGroup(), L.featureGroup()];
+
+				layers.forEach(function(layer) {
+					map.addLayer(layer);
+				});
 
 				var drawControl = new L.Control.Draw({
 					draw: {
@@ -55,12 +59,30 @@
 					},
 
 					edit: {
-						featureGroup: features
+						featureGroup: layers[0]
+					},
+
+					changeFeatureGroup: {
+						featureGroups: [
+							{
+								title: 'Layer #1',
+								layer: layers[0]
+							},
+							{
+								title: 'Layer #2',
+								layer: layers[1]
+							},
+							{
+								title: 'Layer #3',
+								layer: layers[2]
+							}
+						]
 					}
 				});
 
 				map.on('draw:created', function(evt) {
-					features.addLayer(evt.layer);
+					var layer = layers[Math.round(Math.random() * layers.length)];
+					layer.addLayer(evt.layer);
 				});
 
 				map.addControl(drawControl);

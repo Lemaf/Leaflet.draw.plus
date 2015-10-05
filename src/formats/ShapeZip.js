@@ -75,7 +75,7 @@
 				geometry = feature.geometry;
 
 				if (geometry.type.startsWith("Multi")) {
-					for (i=0; i<geometry.coordinates.length; i++) {
+					for (i=0; i < geometry.coordinates.length; i++) {
 						newFeature = {
 							type: geometry.type.substring(5),
 							properties: properties,
