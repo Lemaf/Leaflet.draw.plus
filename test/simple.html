@@ -65,7 +65,7 @@
 					changeFeatureGroup: {
 						featureGroups: [
 							{
-								title: 'Layer #1',
+								title: 'Layer #1111',
 								layer: layers[0]
 							},
 							{
@@ -73,7 +73,7 @@
 								layer: layers[1]
 							},
 							{
-								title: 'Layer #3',
+								title: 'Layer #3333333333333333333333333333',
 								layer: layers[2]
 							}
 						]
@@ -81,7 +81,7 @@
 				});
 
 				map.on('draw:created', function(evt) {
-					var layer = layers[Math.round(Math.random() * layers.length)];
+					var layer = layers[Math.round(Math.random() * (layers.length - 1))];
 					layer.addLayer(evt.layer);
 				});
 
