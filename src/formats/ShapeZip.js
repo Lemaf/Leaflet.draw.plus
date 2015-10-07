@@ -1,4 +1,4 @@
-(function() {
+;(function() {
 
 	if (!L.drawLocal.draw.toolbar.imports.shapeZip) {
 		L.drawLocal.draw.toolbar.imports.shapeZip = {
@@ -89,6 +89,8 @@
 					layer = L.GeoJSON.geometryToLayer(feature);
 					handler._fireCreatedEvent(layer);
 				}
+
+				handler.disable();
 			});
 		},
 

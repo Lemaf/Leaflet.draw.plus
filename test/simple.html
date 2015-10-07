@@ -2,12 +2,15 @@
 	<head>
 		<script type="text/javascript" src="../bower_components/leaflet-dist/leaflet.js"></script>
 		<script type="text/javascript" src="../bower_components/leaflet-draw/dist/leaflet.draw-src.js"></script>
+		<script type="text/javascript" src="../bower_components/jsts/lib/javascript.util.js"></script>
+		<script type="text/javascript" src="../bower_components/jsts/lib/jsts.js"></script>
+		<script type="text/javascript" src="../bower_components/leaflet.jsts/dist/leaflet.jsts.js"></script>
 		<!-- <script type="text/javascript" src="../bower_components/catiline/dist/catiline.js"></script> -->
 		<!-- <script type="text/javascript" src="../bower_components/shp/dist/shp.min.js"></script> -->
-		<script type="text/javascript" src="../dist/leaflet.draw.imports.js"></script>
+		<script type="text/javascript" src="../dist/leaflet.draw.plus.js"></script>
 		<link rel="stylesheet" type="text/css" href="../bower_components/leaflet-dist/leaflet.css">
 		<link rel="stylesheet" type="text/css" href="../bower_components/leaflet-draw/dist/leaflet.draw.css">
-		<link rel="stylesheet" type="text/css" href="../dist/leaflet.draw.imports.css">
+		<link rel="stylesheet" type="text/css" href="../dist/leaflet.draw.plus.css">
 
 		<style type="text/css">
 			html, body {
@@ -32,7 +35,8 @@
 			L.DomEvent.addListener(window, 'load', function() {
 				var map = L.map('testMap', {
 					center: [-21, -45],
-					zoom: 7
+					zoom: 7,
+					maxZoom: 20
 				});
 
 				var tileLayer = L.tileLayer('http://api.tiles.mapbox.com/v4/{mapId}/{z}/{x}/{y}.png?access_token={apiKey}', {
@@ -45,11 +49,17 @@
 				map.addLayer(tileLayer);
 				map.addLayer(editLayer);
 			
-				var layers = [L.featureGroup(), L.featureGroup(), L.featureGroup()];
+				var layers = [
+					L.featureGroup(), 
+					L.featureGroup(), 
+					L.featureGroup()
+				];
 
 				layers.forEach(function(layer) {
 					map.addLayer(layer);
 				});
+
+				var featureGroup = layers[0];
 
 				var drawControl = new L.Control.Draw({
 					draw: {
@@ -59,7 +69,7 @@
 					},
 
 					edit: {
-						featureGroup: layers[0]
+						featureGroup: featureGroup
 					},
 
 					changeFeatureGroup: {
@@ -80,9 +90,27 @@
 					}
 				});
 
+				function logMove(evt) {
+					console.log(evt.type);
+				}
+
+				// test intersects
+				
+				layers[1].validation.within(layers[0], layers[2]);
+
+
+				map.on('draw:featuregroupchanged', function (evt) {
+					featureGroup = evt.featureGroup;
+				});
+
 				map.on('draw:created', function(evt) {
-					var layer = layers[Math.round(Math.random() * (layers.length - 1))];
-					layer.addLayer(evt.layer);
+					featureGroup.addLayer(evt.layer);
+
+					evt.layer.on('draw:markercreated', function(evt) {
+						console.log(evt);
+						evt.marker.on('move', logMove);
+						evt.marker.on('drag', logMove);
+					});
 				});
 
 				map.addControl(drawControl);

@@ -14,7 +14,8 @@ gulp.task('clean:dist', function() {
 gulp.task('jshint', function() {
 	return gulp.src(['./src/**/*.js'])
 		.pipe(jshint())
-		.pipe(jshint.reporter('default'));
+		.pipe(jshint.reporter('default'))
+		.pipe(jshint.reporter('fail'));
 });
 
 gulp.task('concat', ['jshint', 'clean:dist'], function() {
@@ -22,10 +23,12 @@ gulp.task('concat', ['jshint', 'clean:dist'], function() {
 	return gulp.src([
 			'./src/Toolbar.js',
 			'./src/draw/*.js',
-			'./src/formats/*.js'
+			'./src/formats/*.js',
+			'./src/ext/*.js',
+			'./src/validation/*.js'
 		])
 		.pipe(sourcemaps.init())
-			.pipe(concat('leaflet.draw.imports.js', {newLine: '\n'}))
+			.pipe(concat('leaflet.draw.plus.js', {newLine: '\n'}))
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest('./dist/'));
 });

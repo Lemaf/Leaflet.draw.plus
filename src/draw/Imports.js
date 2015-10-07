@@ -1,4 +1,4 @@
-(function() {
+;(function() {
 
 	if (!L.drawLocal.draw.toolbar.imports)
 		L.drawLocal.draw.toolbar.imports = {};
@@ -9,13 +9,13 @@
 			TYPE: 'imports'
 		},
 
-		initialize: function(map, options) {
+		initialize: function (map, options) {
 			this.type = L.Draw.Imports.TYPE;
 
 			L.Draw.Feature.prototype.initialize.call(this, map, options);
 		},
 
-		getActions: function() {
+		getActions: function () {
 
 			return L.Draw.Imports.FORMATS.map(function(format) {
 				var ownElement = null;
