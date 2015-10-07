@@ -1,7 +1,7 @@
 {
-  "name": "leaflet-draw-imports",
+  "name": "leaflet-draw-plus",
   "version": "1.0.0",
-  "description": "Import geometries from files (like shapefile)",
+  "description": "Leaflet Draw+",
   "main": "",
   "moduleType": [
     "globals"

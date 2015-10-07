@@ -96,7 +96,7 @@
 
 				// test intersects
 				
-				layers[1].validation.within(layers[0], layers[2]);
+				layers[1].validation.within(layers[0], layers[2]).enable();
 
 
 				map.on('draw:featuregroupchanged', function (evt) {

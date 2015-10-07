@@ -1,7 +1,7 @@
 {
-  "name": "leaflet-draw-imports",
+  "name": "leaflet-draw-plus",
   "version": "1.0.0",
-  "description": "Leaflet Draw with import files",
+  "description": "Leaflet Draw+",
   "main": "index.js",
   "directories": {
     "test": "test"
