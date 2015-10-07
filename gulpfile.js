@@ -57,3 +57,5 @@ gulp.task('watch:less', function() {
 });
 
 gulp.task('default', ['watch:js', 'watch:less']);
+
+gulp.task('build', ['minify', 'less']);

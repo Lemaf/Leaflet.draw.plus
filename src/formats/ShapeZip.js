@@ -16,7 +16,6 @@
 		createOpenButton: function() {
 			var link = L.DomUtil.create('a');
 
-			link.href = '#';
 			link.style.position = 'relative';
 			link.innerHTML = L.drawLocal.draw.toolbar.imports.shapeZip.text;
 			link.title = L.drawLocal.draw.toolbar.imports.shapeZip.title;

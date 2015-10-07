@@ -4,7 +4,7 @@
 
 	L.FeatureGroup.Validation = L.Handler.extend({
 
-		implements: L.Mixin.Events,
+		includes: L.Mixin.Events,
 
 		options: {
 
