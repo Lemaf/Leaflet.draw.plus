@@ -96,7 +96,7 @@
 
 				// test intersects
 				
-				layers[1].validation.within(layers[0], layers[2]).enable();
+				layers[1].validation.within(layers[0]).enable();
 
 
 				map.on('draw:featuregroupchanged', function (evt) {
@@ -123,6 +123,21 @@
 
 				map.on('draw:importend', function() {
 					console.log('Shapefile import end!')
+				});
+
+
+				// Estou vendo quando há erro de validação
+				map.on('draw:invalid', function(evt) {
+					var layerInvalida = evt.targetLayer;
+					var layerValidacao = evt.sourceLayer;
+					var tipoValidacao = evt.validation;
+
+					console.log('Há erro de ' + tipoValidacao);
+
+				});
+
+				map.on('draw:valid', function(evt) {
+					console.log('Agora disse que está  ok!');
 				});
 			});
 		</script>
