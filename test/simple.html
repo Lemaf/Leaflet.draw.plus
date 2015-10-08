@@ -133,12 +133,15 @@
 					var tipoValidacao = evt.validation;
 
 					console.log('Há erro de ' + tipoValidacao);
+					layers[1].fix.within();
 
 				});
 
 				map.on('draw:valid', function(evt) {
 					console.log('Agora disse que está  ok!');
+
 				});
+
 			});
 		</script>
 	</body>

@@ -1,6 +1,8 @@
 ;(function() {
 
-	var WITHIN = 'within';
+	var JSTS_METHODS = {
+		Within: 'jstsWithin'
+	};
 
 	L.FeatureGroup.Validation = L.Handler.extend({
 
@@ -17,72 +19,151 @@
 		},
 
 		addHooks: function () {
-			if (this._withins) {
-				this._withins.forEach(this._watch.bind(this, WITHIN));
-				this._featureGroup.on('layeradd layerremove', this._getHandler(this._validateTarget, WITHIN));
+			var collectionId, collection, methodName;
+
+			for (var name in JSTS_METHODS) {
+
+				methodName = JSTS_METHODS[name];
+
+				collectionId = this._collectionId(methodName);
+				collection = this[collectionId];
+				if (collection) {
+					collection.forEach(this._watch.bind(this, methodName));
+				}
+
+				this._watchMe(methodName);
+			}
+
+		},
+
+		getRestrictionLayers: function (methodName) {
+			var collectionId  = this._collectionId(methodName);
+			if (this[collectionId]) {
+				return this[collectionId].slice(0);
 			}
 		},
 
-		fireOnMap: function (name, evt) {
+		getFeatureGroup: function () {
+			return this._featureGroup;
+		},
+
+		isValid: function(methodName) {
+			if (methodName && this._errors[methodName]) {
+				return !this._errors[methodName].length;
+			}
+		},
+
+		fireOnMap: function (eventName, event) {
 			if (this._featureGroup._map)
-				this._featureGroup._map.fire(name, evt);
+				this._featureGroup._map.fire(eventName, event);
 		},
 
 		removeHooks: function () {
-			if (this._withins) {
-				this._featureGroup.off('layeradd layerremove', this._getHandler(this._validateTarget, WITHIN));
-				this._unwithin();
+			var collectionId, collection, methodName;
+
+			for (var name in JSTS_METHODS) {
+
+				methodName = JSTS_METHODS[name];
+				collectionId = this._collectionId(methodName);
+				collection = this[collectionId];
+
+				if (collection)
+					collection.forEach(this._unwatch.bind(this, methodName));
+
+				this._unwatchMe(methodName);
+			}
+		},
+
+		/**
+		 * Disable temporarily on validation and execute fn
+		 * @param  {String}   op validation name
+		 * @param  {Function} fn 
+		 * @param  {Object} context thisArg
+		 * @return {Any} fn result
+		 */
+		wait: function (methodName, fn, context) {
+
+			var collectionId = this._collectionId(methodName);
+
+			if (this[collectionId]) {
+				try {
+					this[collectionId].forEach(this._unwatch.bind(this, methodName));
+					this._unwatchMe(methodName);
+
+					return fn.call(context, this);
+				} finally {
+					if (this.enabled()) {
+						this[collectionId].forEach(this._watch.bind(this, methodName));
+						this._watchMe(methodName);
+					}
+				}
 			}
 		},
 
 		within: function () {
-			this._unwithin();
-
-			this._withins = Array.prototype.slice.call(arguments, 0);
-
+			this._on(JSTS_METHODS.Within, Array.prototype.slice.call(arguments, 0));
 			return this;
 		},
 
-		_getHandler: function(handler, op) {
-			var id = L.stamp(handler);
-
-			if (!this._binded[op])
-				this._binded[op] = {};
-
-			if (!this._binded[op][id])
-				this._binded[op][id] = handler.bind(this, op);
-
-			return this._binded[op][id];
+		_collectionId: function (methodName) {
+			return methodName ? '_' + methodName + 's' : null;
 		},
 
-		_validateSource: function (op, evt) {
+		_getHandler: function(handler, methodName) {
+			var id = L.stamp(handler);
+
+			if (!this._binded[methodName])
+				this._binded[methodName] = {};
+
+			if (!this._binded[methodName][id])
+				this._binded[methodName][id] = handler.bind(this, methodName);
+
+			return this._binded[methodName][id];
+		},
+
+		_off: function (methodName) {
+			var collectionId = this._collectionId(methodName);
+
+			if (this[collectionId]) {
+				this[collectionId].forEach(this._unwatch.bind(this, methodName));
+				delete this[collectionId];
+			}
+		},
+
+		_on: function (methodName, layers) {
+			this._off(methodName);
+			this[this._collectionId(methodName)] = layers;
+		},
+
+		_validateRestriction: function (methodName, evt) {
+			var name = methodName.slice(4);
 
 			if (this._featureGroup.isEmpty())
 				return;
 
-			var id = L.stamp(evt.target);
+			var restrictionId = L.stamp(evt.target);
 
-			if (!this._featureGroup[op](evt.target)) {
+			if (!this._featureGroup[methodName](evt.target)) {
 
-				if (!this._errors[op])
-					this._errors[op] = [];
+				if (!this._errors[methodName])
+					this._errors[methodName] = [];
 
-				if (this._errors[op].indexOf(id) === -1)
-					this._errors[op].push(id);
+				if (this._errors[methodName].indexOf(restrictionId) === -1)
+					this._errors[methodName].push(restrictionId);
 
-				evt = {validation: op, targetLayer: this._featureGroup, sourceLayer: evt.target};
+				evt = {validation: name, targetLayer: this._featureGroup, restrictionLayer: evt.target};
 
 				this.fire('invalid', evt);
 				this.fireOnMap('draw:invalid', evt);
 			} else {
-				if (this._errors[op]) {
-					var index = this._errors[op].indexOf(id);
+				if (this._errors[methodName]) {
+					var index = this._errors[methodName].indexOf(restrictionId);
 
 					if (index > -1) {
-						this._errors[op].splice(index, 1);
+						this._errors[methodName].splice(index, 1);
 
-						if (this._errors[op].length === 0) {
-							evt = {validation: op, targetLayer: this._featureGroup};
+						if (this._errors[methodName].length === 0) {
+							evt = {validation: name, targetLayer: this._featureGroup};
 							this.fire('valid', evt);
 							this.fireOnMap('draw:valid', evt);
 						}
@@ -91,18 +172,17 @@
 			}
 		},
 
-		_validateTarget: function(op) {
-			var evt;
-			var valid = true;
+		_validateTarget: function(methodName) {
+			var evt, valid = true, name = methodName.substring(4);
 
-			if (this._errors[op] && this._errors[op].length)
+			if (this._errors[methodName] && this._errors[methodName].length)
 				valid = false;
 
-			this._errors[op] = [];
+			this._errors[methodName] = [];
 
 			if (this._featureGroup.isEmpty()) {
 				if (!valid) {
-					evt = {validation: op, targetLayer: this._featureGroup};
+					evt = {validation: name, targetLayer: this._featureGroup};
 					this.fire('valid', evt);
 					this.fireOnMap('draw:valid', evt);
 				}
@@ -110,61 +190,56 @@
 				return;
 			}
 
-			var layers = this['_' + op + 's'];
+			var restrictionLayers = this[this._collectionId(methodName)],
+			method = this._featureGroup[methodName];
 
-			if (layers) {
-				evt = {validation: op, targetLayer: this._featureGroup};
+			if (restrictionLayers) {
+				evt = {validation: name, targetLayer: this._featureGroup};
 
-				
-				layers.forEach(function(layer) {
+				restrictionLayers.forEach(function(restrictionLayer) {
 
-					if (!this._featureGroup[op](layer)) {
+					if (!method.call(this._featureGroup, restrictionLayer)) {
 
-						this._errors[op].push(L.stamp(layer));
-						evt.sourceLayer = layer;
+						this._errors[methodName].push(L.stamp(restrictionLayer));
+						
+						evt.restrictionLayer = restrictionLayer;
+
 						this.fire('invalid', evt);
 						this.fireOnMap('draw:invalid', evt);
 					}
 
 				}, this);
 
-				if (!this._errors[op].length && !valid) {
-					evt = {validation: op, targetLayer: this._featureGroup};
+				if (!this._errors[methodName].length && !valid) {
+
+					evt = {validation: name, targetLayer: this._featureGroup};
 					this.fire('valid', evt);
 					this.fireOnMap('draw:valid', evt);
 				}
 			}
 		},
 
-		_onLayerPreAdd: function (op, evt) {
-		},
-
-		_onLayerRemove: function (op, evt) {
-		},
-
-		_onLayerPreRemove: function(op, evt) {
-		},
-
-		_unwithin: function () {
-			if (this._withins) {
-				this._withins.forEach(this._unwatch.bind(this, WITHIN));
-				delete this._withins;
-			}
-		},
-
-		_unwatch: function (op, featureGroup) {
-			var watcher = this._getHandler(this._validateSource, op);
+		_unwatch: function (methodName, featureGroup) {
+			var watcher = this._getHandler(this._validateRestriction, methodName);
 
 			featureGroup.off('layeradd', watcher);
 			featureGroup.off('layerremove', watcher);
 		},
 
-		_watch: function (op, featureGroup) {
+		_unwatchMe: function (methodName) {
+			this._featureGroup.off('layeradd layerremove', this._getHandler(this._validateTarget, methodName));
+		},
 
-			var watcher = this._getHandler(this._validateSource, op);
+		_watch: function (methodName, featureGroup) {
+
+			var watcher = this._getHandler(this._validateRestriction, methodName);
 
 			featureGroup.on('layeradd', watcher);
 			featureGroup.on('layerremove', watcher);
+		},
+
+		_watchMe: function (methodName) {
+			this._featureGroup.on('layeradd layerremove', this._getHandler(this._validateTarget, methodName));
 		}
 
 	});
@@ -173,6 +248,9 @@
 	L.FeatureGroup.addInitHook(function () {
 		if (!this.validation)
 			this.validation = new L.FeatureGroup.Validation(this);
+
+		if (!this.fix)
+			this.fix = new L.FeatureGroup.Fixer(this.validation);
 	});
 
 })();
