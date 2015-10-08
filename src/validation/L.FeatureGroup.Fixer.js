@@ -2,13 +2,13 @@
 
 	var FIX_OPERATIONS = {
 		within: {
-			check: 'jstsIntersects',
-			fix: ['jstsIntersection']
+			check: 'intersects',
+			fix: ['intersection']
 		}
 	};
 
 	var JSTS_METHODS = {
-		within: 'jstsWithin'
+		within: 'within'
 	};
 
 	L.FeatureGroup.Fixer = L.Class.extend({
@@ -18,11 +18,14 @@
 		},
 
 		within: function () {
-			var valid = this._validation.isValid(JSTS_METHODS.within);
+			var self = this;
+			setTimeout(function() {
+				var valid = self._validation.isValid(JSTS_METHODS.within);
 
-			if (!valid) {
-				this._fix(JSTS_METHODS.within, FIX_OPERATIONS.within);
-			}
+				if (!valid) {
+					self._fix(JSTS_METHODS.within, FIX_OPERATIONS.within);
+				}
+			});
 		},
 
 		_fix: function (methodName, operation) {
@@ -40,11 +43,11 @@
 				fixedLayer, i, fixMethod;
 
 				function fixLayer (layer, restrictionLayer) {
-					if (layer[checkMethod](restrictionLayer)) {
+					if (layer.jsts[checkMethod](restrictionLayer)) {
 						for (i = 0; i < fixMethods.length; i++) {
 							fixMethod = fixMethods[i];
 
-							layer = layer[fixMethod](restrictionLayer);
+							layer = layer.jsts[fixMethod](restrictionLayer);
 						}
 					}
 
@@ -52,9 +55,9 @@
 				}
 
 				featureGroup.eachLayer(function(layer) {
-					if (layer[checkMethod]) {
-						fixedLayer = restrictionLayers.reduce(fixLayer, layer);
+					fixedLayer = restrictionLayers.reduce(fixLayer, layer);
 
+					if (fixedLayer !== layer) {
 						featureGroup.removeLayer(layer);
 						featureGroup.addLayer(fixedLayer);
 					}

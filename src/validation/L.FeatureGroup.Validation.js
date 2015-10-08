@@ -1,7 +1,7 @@
 ;(function() {
 
 	var JSTS_METHODS = {
-		Within: 'jstsWithin'
+		Within: 'within'
 	};
 
 	L.FeatureGroup.Validation = L.Handler.extend({
@@ -143,7 +143,7 @@
 
 			var restrictionId = L.stamp(evt.target);
 
-			if (!this._featureGroup[methodName](evt.target)) {
+			if (!this._featureGroup.jsts[methodName](evt.target)) {
 
 				if (!this._errors[methodName])
 					this._errors[methodName] = [];
@@ -191,14 +191,14 @@
 			}
 
 			var restrictionLayers = this[this._collectionId(methodName)],
-			method = this._featureGroup[methodName];
+			method = this._featureGroup.jsts[methodName];
 
 			if (restrictionLayers) {
 				evt = {validation: name, targetLayer: this._featureGroup};
 
 				restrictionLayers.forEach(function(restrictionLayer) {
 
-					if (!method.call(this._featureGroup, restrictionLayer)) {
+					if (!method.call(this._featureGroup.jsts, restrictionLayer)) {
 
 						this._errors[methodName].push(L.stamp(restrictionLayer));
 						
