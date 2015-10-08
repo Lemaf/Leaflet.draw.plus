@@ -40,26 +40,37 @@
 			this._validation.wait(methodName, function() {
 				var featureGroup = this._validation.getFeatureGroup(),
 				restrictionLayers = this._validation.getRestrictionLayers(methodName),
-				fixedLayer, i, fixMethod;
+				fixedGeometry, i, fixMethod, restoreEdit;
 
-				function fixLayer (layer, restrictionLayer) {
-					if (layer.jsts[checkMethod](restrictionLayer)) {
+				function fixLayer (geometry, restrictionLayer) {
+
+					restrictionGeometry = restrictionLayer.jsts.geometry();
+
+					if (geometry[checkMethod](restrictionGeometry)) {
 						for (i = 0; i < fixMethods.length; i++) {
 							fixMethod = fixMethods[i];
 
-							layer = layer.jsts[fixMethod](restrictionLayer);
+							geometry = geometry[fixMethod](restrictionGeometry);
 						}
 					}
 
-					return layer;
+					return geometry;
 				}
 
 				featureGroup.eachLayer(function(layer) {
-					fixedLayer = restrictionLayers.reduce(fixLayer, layer);
+					fixedGeometry = restrictionLayers.reduce(fixLayer, layer.jsts.geometry());
 
-					if (fixedLayer !== layer) {
-						featureGroup.removeLayer(layer);
-						featureGroup.addLayer(fixedLayer);
+					if (fixedGeometry && fixedGeometry !== layer) {
+						if (layer.editing) {
+							restoreEdit = layer.editing.enabled();
+							layer.editing.disable();
+						} else
+							restoreEdit = false;
+
+						layer.setLatLngs(L.jsts.jstsToLatLngs(fixedGeometry));
+
+						if (restoreEdit)
+							layer.editing.enable();
 					}
 				});
 			}, this);

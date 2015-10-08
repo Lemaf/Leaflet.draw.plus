@@ -135,6 +135,11 @@
 			this[this._collectionId(methodName)] = layers;
 		},
 
+		_validateFeature: function (methodName, evt) {
+			this._featureGroup.jsts.clean();
+			this._validateTarget(methodName);
+		},
+
 		_validateRestriction: function (methodName, evt) {
 			var name = methodName.slice(4);
 
@@ -170,6 +175,24 @@
 					}
 				}
 			}
+		},
+
+		_validateRestrictionFeature: function (methodName, evt) {
+			var collectionId = this._collectionId(methodName),
+			collection, restrictionLayer;
+
+			if ((collection = this[collectionId])) {
+				for (var i = 0; i < collection.length; i++) {
+					if (collection[i].hasLayer(evt.target)) {
+
+						(restrictionLayer = collection[i]).jsts.clean();
+						break;
+					}
+				}
+			}
+
+			if (restrictionLayer)
+				this._validateRestriction(methodName, {target: restrictionLayer});
 		},
 
 		_validateTarget: function(methodName) {
@@ -224,9 +247,25 @@
 
 			featureGroup.off('layeradd', watcher);
 			featureGroup.off('layerremove', watcher);
+
+			featureGroup.off('layeradd', this._getHandler(this._watchRestrictionFeature, methodName));
+
+			featureGroup.eachLayer(function (layer) {
+				if (layer.editing) {
+					layer.off('edit', this._getHandler(this._validateRestrictionFeature, methodName));
+				}
+			}, this);
 		},
 
 		_unwatchMe: function (methodName) {
+
+			this._featureGroup.eachLayer(function (layer) {
+				if (layer.editing) {
+					layer.off('edit', this._getHandler(this._validateFeature, methodName));
+				}
+			}, this);
+
+			this._featureGroup.off('layeradd', this._getHandler(this._watchFeature, methodName));
 			this._featureGroup.off('layeradd layerremove', this._getHandler(this._validateTarget, methodName));
 		},
 
@@ -234,12 +273,35 @@
 
 			var watcher = this._getHandler(this._validateRestriction, methodName);
 
+			featureGroup.eachLayer(function (layer) {
+				this._watchRestrictionFeature(methodName, {layer: layer});
+			}, this);
+
+			featureGroup.on('layeradd', this._getHandler(this._watchRestrictionFeature, methodName));
 			featureGroup.on('layeradd', watcher);
 			featureGroup.on('layerremove', watcher);
 		},
 
+		_watchFeature: function (methodName, evt) {
+			if (evt.layer.editing) {
+				evt.layer.on('edit', this._getHandler(this._validateFeature, methodName));
+			}
+		},
+
 		_watchMe: function (methodName) {
+
+			this._featureGroup.eachLayer(function (layer) {
+				this._watchFeature(methodName, {layer: layer});
+			}, this);
+
+			this._featureGroup.on('layeradd', this._getHandler(this._watchFeature, methodName));
 			this._featureGroup.on('layeradd layerremove', this._getHandler(this._validateTarget, methodName));
+		},
+
+		_watchRestrictionFeature: function (methodName, evt) {
+			if (evt.layer.editing) {
+				evt.layer.on('edit', this._getHandler(this._validateRestrictionFeature, methodName));
+			}
 		}
 
 	});

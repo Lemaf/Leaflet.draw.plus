@@ -18,16 +18,23 @@
 			this._layer.off('layerremove', this._disableEditing, this);
 		},
 
-		_enableEditing: function (layer) {
-			if (layer.editing)
-				layer.editing.enable();
+		_disableEditing: function (layer) {
+			if (layer.editing) {
+				layer.editing.disable();
+				layer.off('edit', this._onLayerEdit, this);
+			}
 		},
 
-		_disableEditing: function (layer) {
-			if (layer.editing)
-				layer.editing.disable();
-		}
+		_enableEditing: function (layer) {
+			if (layer.editing) {
+				layer.editing.enable();
+				layer.on('edit', this._onLayerEdit, this);
+			}
+		},
 
+		_onLayerEdit: function (evt) {
+			this.fire('edit', {layer: evt.layer || evt.target});
+		}
 	});
 
 	L.FeatureGroup.addInitHook(function () {
