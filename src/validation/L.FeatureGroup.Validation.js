@@ -19,7 +19,7 @@
 		addHooks: function () {
 			if (this._withins) {
 				this._withins.forEach(this._watch.bind(this, WITHIN));
-				this._featureGroup.on('layeradd layerremove', this._getHandler(this._validateMe, WITHIN));
+				this._featureGroup.on('layeradd layerremove', this._getHandler(this._validateTarget, WITHIN));
 			}
 		},
 
@@ -30,7 +30,7 @@
 
 		removeHooks: function () {
 			if (this._withins) {
-				this._featureGroup.off('layeradd layerremove', this._getHandler(this._validateMe, WITHIN));
+				this._featureGroup.off('layeradd layerremove', this._getHandler(this._validateTarget, WITHIN));
 				this._unwithin();
 			}
 		},
@@ -55,9 +55,9 @@
 			return this._binded[op][id];
 		},
 
-		_validate: function (op, evt) {
+		_validateSource: function (op, evt) {
 
-			if (!this._featureGroup.getLayers().length)
+			if (this._featureGroup.isEmpty())
 				return;
 
 			var id = L.stamp(evt.target);
@@ -91,7 +91,7 @@
 			}
 		},
 
-		_validateMe: function(op) {
+		_validateTarget: function(op) {
 			var evt;
 			var valid = true;
 
@@ -100,7 +100,7 @@
 
 			this._errors[op] = [];
 
-			if (!this._featureGroup.getLayers().length) {
+			if (this._featureGroup.isEmpty()) {
 				if (!valid) {
 					evt = {validation: op, targetLayer: this._featureGroup};
 					this.fire('valid', evt);
@@ -153,7 +153,7 @@
 		},
 
 		_unwatch: function (op, featureGroup) {
-			var watcher = this._getHandler(this._validate, op);
+			var watcher = this._getHandler(this._validateSource, op);
 
 			featureGroup.off('layeradd', watcher);
 			featureGroup.off('layerremove', watcher);
@@ -161,7 +161,7 @@
 
 		_watch: function (op, featureGroup) {
 
-			var watcher = this._getHandler(this._validate, op);
+			var watcher = this._getHandler(this._validateSource, op);
 
 			featureGroup.on('layeradd', watcher);
 			featureGroup.on('layerremove', watcher);
