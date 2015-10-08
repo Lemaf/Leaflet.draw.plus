@@ -98,6 +98,25 @@
 				
 				layers[1].validation.within(layers[0]).enable();
 
+				var triangle = L.geoJson({
+					type: 'Feature',
+					geometry: {
+						type: 'Polygon',
+						coordinates: [
+							[
+								[-45, -21],
+								[-44, -21],
+								[-44.5, -20],
+								[-45, -21]
+							]
+						]
+					},
+					properties: {
+						prop: 'value'
+					}
+				});
+
+				layers[0].addLayer(triangle);
 
 				map.on('draw:featuregroupchanged', function (evt) {
 					featureGroup = evt.featureGroup;
@@ -132,13 +151,15 @@
 					var layerValidacao = evt.sourceLayer;
 					var tipoValidacao = evt.validation;
 
-					console.log('Há erro de ' + tipoValidacao);
-					layers[1].fix.within();
+					if (featureGroup === layerInvalida)
+						layers[1].fix.within();
+					else
+						alert("Ficou inválido!");
 
 				});
 
 				map.on('draw:valid', function(evt) {
-					console.log('Agora disse que está  ok!');
+					alert("Parabéns, está tudo ok!");
 
 				});
 

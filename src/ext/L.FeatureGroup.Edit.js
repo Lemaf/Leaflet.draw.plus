@@ -33,7 +33,7 @@
 		},
 
 		_onLayerEdit: function (evt) {
-			this.fire('edit', {layer: evt.layer || evt.target});
+			this._layer.fire('edit', {layer: evt.layer || evt.target});
 		}
 	});
 

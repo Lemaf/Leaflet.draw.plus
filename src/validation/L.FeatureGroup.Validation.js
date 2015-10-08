@@ -141,7 +141,6 @@
 		},
 
 		_validateRestriction: function (methodName, evt) {
-			var name = methodName.slice(4);
 
 			if (this._featureGroup.isEmpty())
 				return;
@@ -156,7 +155,7 @@
 				if (this._errors[methodName].indexOf(restrictionId) === -1)
 					this._errors[methodName].push(restrictionId);
 
-				evt = {validation: name, targetLayer: this._featureGroup, restrictionLayer: evt.target};
+				evt = {validation: methodName, targetLayer: this._featureGroup, restrictionLayer: evt.target};
 
 				this.fire('invalid', evt);
 				this.fireOnMap('draw:invalid', evt);
@@ -168,7 +167,7 @@
 						this._errors[methodName].splice(index, 1);
 
 						if (this._errors[methodName].length === 0) {
-							evt = {validation: name, targetLayer: this._featureGroup};
+							evt = {validation: methodName, targetLayer: this._featureGroup};
 							this.fire('valid', evt);
 							this.fireOnMap('draw:valid', evt);
 						}
@@ -196,7 +195,7 @@
 		},
 
 		_validateTarget: function(methodName) {
-			var evt, valid = true, name = methodName.substring(4);
+			var evt, valid = true;
 
 			if (this._errors[methodName] && this._errors[methodName].length)
 				valid = false;
@@ -205,7 +204,7 @@
 
 			if (this._featureGroup.isEmpty()) {
 				if (!valid) {
-					evt = {validation: name, targetLayer: this._featureGroup};
+					evt = {validation: methodName, targetLayer: this._featureGroup};
 					this.fire('valid', evt);
 					this.fireOnMap('draw:valid', evt);
 				}
@@ -217,7 +216,7 @@
 			method = this._featureGroup.jsts[methodName];
 
 			if (restrictionLayers) {
-				evt = {validation: name, targetLayer: this._featureGroup};
+				evt = {validation: methodName, targetLayer: this._featureGroup};
 
 				restrictionLayers.forEach(function(restrictionLayer) {
 
@@ -235,7 +234,7 @@
 
 				if (!this._errors[methodName].length && !valid) {
 
-					evt = {validation: name, targetLayer: this._featureGroup};
+					evt = {validation: methodName, targetLayer: this._featureGroup};
 					this.fire('valid', evt);
 					this.fireOnMap('draw:valid', evt);
 				}

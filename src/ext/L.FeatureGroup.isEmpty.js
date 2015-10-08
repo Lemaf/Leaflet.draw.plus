@@ -1,10 +1,17 @@
 L.FeatureGroup.include({
 	isEmpty: function() {
 
+		var empty = true, deepEmpty = true;
+
 		for (var id in this._layers) {
-			return false;
+			empty = false;
+			if (this._layers[id].isEmpty) {
+				if (!this._layers[id].isEmpty())
+					return false;
+			} else
+				deepEmpty = false;
 		}
 
-		return true;
+		return empty || deepEmpty;
 	}
 });
