@@ -73,6 +73,8 @@
 							layer.editing.enable();
 					}
 				});
+
+				featureGroup.jsts.clean();
 			}, this);
 			
 		}

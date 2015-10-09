@@ -136,8 +136,11 @@
 		},
 
 		_validateFeature: function (methodName, evt) {
-			this._featureGroup.jsts.clean();
-			this._validateTarget(methodName);
+			var self = this;
+			setTimeout(function () {
+				self._featureGroup.jsts.clean();
+				self._validateTarget(methodName);
+			});
 		},
 
 		_validateRestriction: function (methodName, evt) {
@@ -177,21 +180,25 @@
 		},
 
 		_validateRestrictionFeature: function (methodName, evt) {
-			var collectionId = this._collectionId(methodName),
-			collection, restrictionLayer;
+			var self = this;
+			setTimeout(function () {
+				var collectionId = self._collectionId(methodName),
+				collection, restrictionLayer;
 
-			if ((collection = this[collectionId])) {
-				for (var i = 0; i < collection.length; i++) {
-					if (collection[i].hasLayer(evt.target)) {
+				if ((collection = self[collectionId])) {
+					for (var i = 0; i < collection.length; i++) {
+						if (collection[i].hasLayer(evt.target)) {
 
-						(restrictionLayer = collection[i]).jsts.clean();
-						break;
+							(restrictionLayer = collection[i]).jsts.clean();
+							break;
+						}
 					}
 				}
-			}
 
-			if (restrictionLayer)
-				this._validateRestriction(methodName, {target: restrictionLayer});
+				if (restrictionLayer) {
+					self._validateRestriction(methodName, {target: restrictionLayer});
+				}
+			});
 		},
 
 		_validateTarget: function(methodName) {

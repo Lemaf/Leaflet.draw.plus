@@ -19,6 +19,7 @@
 		},
 
 		_disableEditing: function (layer) {
+			layer = layer.layer || layer;
 			if (layer.editing) {
 				layer.editing.disable();
 				layer.off('edit', this._onLayerEdit, this);
@@ -26,6 +27,7 @@
 		},
 
 		_enableEditing: function (layer) {
+			layer = layer.layer || layer;
 			if (layer.editing) {
 				layer.editing.enable();
 				layer.on('edit', this._onLayerEdit, this);
