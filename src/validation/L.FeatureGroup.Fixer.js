@@ -48,7 +48,7 @@
 					for (i = 0; i < fixMethods.length; i++) {
 						fixMethod = fixMethods[i];
 
-						geometry = geometry[fixMethod](restrictionGeometry);
+						geometry = L.jsts[fixMethod](geometry, restrictionGeometry);
 					}
 
 					return geometry;
@@ -71,10 +71,24 @@
 							} else
 								restoreEdit = false;
 
-							layer.setLatLngs(L.jsts.jstsToLatLngs(fixedGeometry));
+							if (fixedGeometry instanceof jsts.geom.MultiPolygon) {
+								featureGroup.removeLayer(layer);
 
-							if (restoreEdit)
-								layer.editing.enable();
+								var options = layer.options;
+
+								for (var i=0, il = fixedGeometry.getNumGeometries(); i < il; i++) {
+									layer = L.jsts.jstsToleaflet(fixedGeometry.getGeometryN(i), options);
+									featureGroup.addLayer(layer);
+									if (restoreEdit && layer.editing)
+										layer.editing.enable();
+								}
+
+							} else {
+								layer.setLatLngs(L.jsts.jstsToLatLngs(fixedGeometry));
+
+								if (restoreEdit)
+									layer.editing.enable();
+							}
 						}
 					} else {
 						featureGroup.removeLayer(layer);
