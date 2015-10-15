@@ -40,37 +40,44 @@
 			this._validation.wait(methodName, function() {
 				var featureGroup = this._validation.getFeatureGroup(),
 				restrictionLayers = this._validation.getRestrictionLayers(methodName),
-				fixedGeometry, i, fixMethod, restoreEdit;
+				fixedGeometry, i, fixMethod, restoreEdit, filtered;
 
 				function fixLayer (geometry, restrictionLayer) {
-
 					restrictionGeometry = restrictionLayer.jsts.geometry();
 
-					if (geometry[checkMethod](restrictionGeometry)) {
-						for (i = 0; i < fixMethods.length; i++) {
-							fixMethod = fixMethods[i];
+					for (i = 0; i < fixMethods.length; i++) {
+						fixMethod = fixMethods[i];
 
-							geometry = geometry[fixMethod](restrictionGeometry);
-						}
+						geometry = geometry[fixMethod](restrictionGeometry);
 					}
 
 					return geometry;
 				}
 
 				featureGroup.eachLayer(function(layer) {
-					fixedGeometry = restrictionLayers.reduce(fixLayer, layer.jsts.geometry());
 
-					if (fixedGeometry && fixedGeometry !== layer) {
-						if (layer.editing) {
-							restoreEdit = layer.editing.enabled();
-							layer.editing.disable();
-						} else
-							restoreEdit = false;
+					filtered = restrictionLayers.filter(function (restrictionLayer) {
+						return (layer.jsts.geometry())[checkMethod](restrictionLayer.jsts.geometry());
+					});
 
-						layer.setLatLngs(L.jsts.jstsToLatLngs(fixedGeometry));
+					if (filtered.length) {
 
-						if (restoreEdit)
-							layer.editing.enable();
+						fixedGeometry = filtered.reduce(fixLayer, layer.jsts.geometry());
+
+						if (fixedGeometry && fixedGeometry !== layer) {
+							if (layer.editing) {
+								restoreEdit = layer.editing.enabled();
+								layer.editing.disable();
+							} else
+								restoreEdit = false;
+
+							layer.setLatLngs(L.jsts.jstsToLatLngs(fixedGeometry));
+
+							if (restoreEdit)
+								layer.editing.enable();
+						}
+					} else {
+						featureGroup.removeLayer(layer);
 					}
 				});
 
