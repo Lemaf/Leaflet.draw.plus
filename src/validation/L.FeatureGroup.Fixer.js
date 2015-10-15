@@ -3,7 +3,7 @@
 	var FIX_OPERATIONS = {
 		within: {
 			check: 'intersects',
-			fix: ['intersection']
+			fix: 'intersection'
 		}
 	};
 
@@ -35,23 +35,27 @@
 				return;
 
 			var checkMethod = operation.check,
-			fixMethods = operation.fix;
+			fixMethod = operation.fix;
 
 			this._validation.wait(methodName, function() {
 				var featureGroup = this._validation.getFeatureGroup(),
 				restrictionLayers = this._validation.getRestrictionLayers(methodName),
-				fixedGeometry, i, fixMethod, restoreEdit, filtered;
+				fixedGeometry, i, restoreEdit, filtered;
 
-				function fixLayer (geometry, restrictionLayer) {
-					restrictionGeometry = restrictionLayer.jsts.geometry();
+				// function fixLayer (geometry, restrictionLayer) {
+				// 	restrictionGeometry = restrictionLayer.jsts.geometry();
 
-					for (i = 0; i < fixMethods.length; i++) {
-						fixMethod = fixMethods[i];
+				// 	for (i = 0; i < fixMethods.length; i++) {
+				// 		fixMethod = fixMethods[i];
 
-						geometry = L.jsts[fixMethod](geometry, restrictionGeometry);
-					}
+				// 		geometry = L.jsts[fixMethod](geometry, restrictionGeometry);
+				// 	}
 
-					return geometry;
+				// 	return geometry;
+				// }
+				
+				function union(geometry, layer) {
+					return L.jsts.union(geometry, layer.jsts.geometry(), 'Polygon');
 				}
 
 				featureGroup.eachLayer(function(layer) {
@@ -62,9 +66,12 @@
 
 					if (filtered.length) {
 
-						fixedGeometry = filtered.reduce(fixLayer, layer.jsts.geometry());
+						restrictionGeometry = filtered.slice(1).reduce(union, filtered[0].jsts.geometry());
 
-						if (fixedGeometry && fixedGeometry !== layer) {
+						fixedGeometry = L.jsts[fixMethod](layer.jsts.geometry(), restrictionGeometry);
+
+						if (fixedGeometry) {
+
 							if (layer.editing) {
 								restoreEdit = layer.editing.enabled();
 								layer.editing.disable();
@@ -77,6 +84,7 @@
 								var options = layer.options;
 
 								for (var i=0, il = fixedGeometry.getNumGeometries(); i < il; i++) {
+									
 									layer = L.jsts.jstsToleaflet(fixedGeometry.getGeometryN(i), options);
 									featureGroup.addLayer(layer);
 									if (restoreEdit && layer.editing)

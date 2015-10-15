@@ -96,7 +96,7 @@
 
 				// test intersects
 				
-				layers[1].validation.within(layers[0]).enable();
+				layers[1].validation.within(layers[0], layers[2]).enable();
 
 				var triangle = L.geoJson({
 					type: 'Feature',
@@ -117,6 +117,23 @@
 				});
 
 				layers[0].addLayer(triangle);
+
+				triangle = L.geoJson({
+					type: 'Feature',
+					geometry: {
+						type: 'Polygon',
+						coordinates: [
+							[
+								[-44.5, -20],
+								[-44, -21],
+								[-43.5, -20],
+								[-44.5, -20]
+							]
+						]
+					}
+				});
+
+				layers[2].addLayer(triangle);
 
 				map.on('draw:featuregroupchanged', function (evt) {
 					featureGroup = evt.featureGroup;
