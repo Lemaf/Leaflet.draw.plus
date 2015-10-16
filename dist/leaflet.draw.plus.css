@@ -11,5 +11,5 @@ input[type="file"].leaflet-draw-draw-imports-action {
   width: 100%;
 }
 .leaflet-draw-toolbar .leaflet-draw-draw-imports {
-  background-image: url(images/spritesheet.png);
+  background-image: url(images/l.draw.plus-spritesheet.png);
 }
