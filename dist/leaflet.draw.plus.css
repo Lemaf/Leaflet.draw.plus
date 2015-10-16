@@ -10,3 +10,6 @@ input[type="file"].leaflet-draw-draw-imports-action {
   top: 0px;
   width: 100%;
 }
+.leaflet-draw-toolbar .leaflet-draw-draw-imports {
+  background-image: url(images/spritesheet.png);
+}
