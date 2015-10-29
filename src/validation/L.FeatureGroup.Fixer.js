@@ -4,11 +4,16 @@
 		within: {
 			check: 'intersects',
 			fix: 'intersection'
+		},
+		disjoint: {
+			check: 'intersects',
+			fix: 'difference'
 		}
 	};
 
 	var JSTS_METHODS = {
-		within: 'within'
+		within: 'within',
+		disjoint: 'disjoint'
 	};
 
 	L.FeatureGroup.Fixer = L.Class.extend({
@@ -24,6 +29,17 @@
 
 				if (!valid) {
 					self._fix(JSTS_METHODS.within, FIX_OPERATIONS.within);
+				}
+			});
+		},
+
+		disjoint: function () {
+			var self = this;
+			setTimeout(function() {
+				var valid = self._validation.isValid(JSTS_METHODS.disjoint);
+
+				if (!valid) {
+					self._fix(JSTS_METHODS.disjoint, FIX_OPERATIONS.disjoint);
 				}
 			});
 		},

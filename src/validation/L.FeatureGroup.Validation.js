@@ -1,7 +1,8 @@
 ;(function() {
 
 	var JSTS_METHODS = {
-		Within: 'within'
+		Within: 'within',
+		Disjoint: 'disjoint'
 	};
 
 	L.FeatureGroup.Validation = L.Handler.extend({
@@ -102,6 +103,11 @@
 
 		within: function () {
 			this._on(JSTS_METHODS.Within, Array.prototype.slice.call(arguments, 0));
+			return this;
+		},
+
+		disjoint: function () {
+			this._on(JSTS_METHODS.Disjoint, Array.prototype.slice.call(arguments, 0));
 			return this;
 		},
 
