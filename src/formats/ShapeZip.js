@@ -38,13 +38,22 @@
 			if (!this._worker) {
 				if (L.Draw.Imports.SHPJS_URL) {
 
+					var projLine = '';
+
+					if (L.Draw.Imports.PROJ_URL)
+						projLine = "importScripts('" + L.Draw.Imports.PROJ_URL + "');"
+
 					// No external .js script
-					var script = "try { importScripts('" + L.Draw.Imports.SHPJS_URL + "'); } catch (e) {console.error(e); throw e;}\n" +
-					"onmessage = function(e) {\n" +
-						"console.log('Processing ShapeZip...');\n" +
-						"var geoJSON = shp.parseZip(e.data.byteArray);\n" +
-						"console.log('ShapeZip processed!');\n" +
-						"postMessage({id: e.data.id, geoJSON: geoJSON});\n" +
+
+					var script = "try { "
+					+ "importScripts('" + L.Draw.Imports.SHPJS_URL + "');"
+					+ projLine
+					+ "} catch (e) {console.error(e); throw e;}\n"
+					+ "onmessage = function(e) {\n"
+						+ "console.log('Processing ShapeZip...');\n"
+						+ "var geoJSON = shp.parseZip(e.data.byteArray);\n"
+						+ "console.log('ShapeZip processed!');\n"
+						+ "postMessage({id: e.data.id, geoJSON: geoJSON});\n"
 					"}";
 
 					var urlData = URL.createObjectURL(new Blob([script], {type: "application/javascript"}));
