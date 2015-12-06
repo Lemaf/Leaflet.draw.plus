@@ -73,6 +73,7 @@
 					},
 
 					changeFeatureGroup: {
+						title: 'Please, choice a feature group',
 						featureGroups: [
 							{
 								title: 'Layer #1111',
@@ -177,7 +178,10 @@
 
 				map.on('draw:valid', function(evt) {
 					alert("Parabéns, está tudo ok!");
+				});
 
+				map.on('draw:fixed', function (evt) {
+					console.log('Mapa corrigido!');
 				});
 
 			});

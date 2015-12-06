@@ -120,7 +120,12 @@
 				});
 
 				featureGroup.jsts.clean();
+
 			}, this);
+
+			this._validation.fireOnMap('draw:fixed', {
+				layer: this._validation.getFeatureGroup()
+			});
 			
 		}
 	});
