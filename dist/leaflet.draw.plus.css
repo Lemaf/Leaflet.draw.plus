@@ -12,4 +12,11 @@ input[type="file"].leaflet-draw-draw-imports-action {
 }
 .leaflet-draw-toolbar .leaflet-draw-draw-imports {
   background-image: url(images/l.draw.plus-spritesheet.png);
+  background-repeat: no-repeat;
+  background-position: -8px -8px;
+}
+.leaflet-draw-toolbar .leaflet-draw-draw-imports.leaflet-disabled {
+  background-image: url(images/l.draw.plus-spritesheet.png);
+  background-repeat: no-repeat;
+  background-position: -50px -8px;
 }
